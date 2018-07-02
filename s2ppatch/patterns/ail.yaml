@@ -1,0 +1,140 @@
+---
+name: Miles Audio Interface Library 16-bit [1/2]
+ragel: |
+  cs?.mov_dx_word_any16.
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  test_al_i8.0x80.
+  jnz_i8.any.
+  sti.
+  jmp_i8.0x00.
+  jmp_i8.0x00.
+  jmp_i8.0x00.
+  cs?.mov_dx_word_any16.
+  in_al_dx.
+  cs?.mov_dx_word_any16.
+  jmp_i8.any.
+  cs?.mov_dx_word_any16.
+  mov_al_byte_bp_i8.any @{aux_ptr=fpc;}.
+  out_dx_al
+# Stack layout differs in different versions, use a hack to avoid
+# having to have multiple patterns.
+hack: |
+  /* mov ah, [bp+x] */
+  *ts++ = 0x8A;
+  *ts++ = 0x66;
+  *ts++ = *aux_ptr;
+replace: |
+  %define ARG ah
+  %include 'data16.s'
+---
+name: Miles Audio Interface Library 16-bit [2/2]
+ragel: |
+  cs?.mov_dx_word_any16.
+  mov_cx_i16.0xFF.0xFF.
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  loop_i8.any.
+  jmp_i8.any.
+  mov_al_byte_bp_i8.any.
+  out_dx_al.
+  mov_cx_i16.0xFF.0xFF.
+  cs?.mov_dx_word_any16.
+  in_al_dx.
+  test_al_i8.0x80.
+  jnz_i8.any.
+  cs?.mov_dx_word_any16.
+  in_al_dx.
+  cmp_al_i8.0xFE.
+  jz_i8.0x07.
+  loop_i8.any.
+  mov_ax_i16.0x00.0x00.
+  jmp_i8.0x03
+replace: |
+  %include 'cmd16.s'
+---
+name: Miles Audio Interface Library 32-bit [1/2]
+ragel: |
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.0x2A.
+  test_al_i8.0x80.
+  jnz_i8.0xF7.
+  pushf.
+  sti.
+  jmp_i8.0x00.
+  jmp_i8.0x00.
+  jmp_i8.0x00.
+  push_ebp.
+  mov_ebp_esp.
+  test_byte_ebp_i8_i8.any.any.
+  cli.
+  jz_i8.0x01.
+  sti.
+  pop_ebp.
+  popf.
+  mov_dx_dword_any32.
+  in_al_dx.
+  mov_dx_dword_any32.
+  jmp_i8.0xD1.
+  mov_dx_dword_any32.
+  mov_al_byte_ebp_i8.0x08.
+  out_dx_al
+replace: |
+  bits 32
+  %define ARG [ebp+8]
+  %include 'data32.s'
+  # jump over the area with the relocations...
+  jmp skip
+  times 32 db 0
+  skip:
+---
+name: Miles Audio Interface Library 32-bit [2/2]
+ragel: |
+  mov_ecx_i32.0xFF.0xFF.0x00.0x00.
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.0x04.
+  loop_i8.0xF9.
+  jmp_i8.0x23.
+  mov_al_byte_ebp_i8.0x08.
+  out_dx_al.
+  mov_ecx_i32.0xFF.0xFF.0x00.0x00.
+  mov_dx_dword_any32.
+  in_al_dx.
+  test_al_i8.0x80.
+  jnz_i8.0x0C.
+  mov_dx_dword_any32.
+  in_al_dx.
+  cmp_al_i8.0xFE.
+  jz_i8.0x09.
+  loop_i8.0xE6.
+  mov_eax_i32.0x00.0x00.0x00.0x00.
+  jmp_i8.0x05
+replace: |
+  bits 32
+  mov dx, PORT2
+  mov al, 0x02
+  out dx, al
+  dec edx
+  dec edx
+  mov al, [ebp+8]
+  out dx, al
+  inc edx
+  inc edx
+  mov al, 0x06
+  out dx, al
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+    test ebx, 0
+  mov al, 0x0F
+  out dx, al
+  mov al, 0x07
+  out dx, al
+    test ebx, 0

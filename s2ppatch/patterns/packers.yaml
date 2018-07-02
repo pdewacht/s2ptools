@@ -1,0 +1,15 @@
+---
+name: EXEPACK signature
+ragel: |
+  'Packed file is corrupt'
+warn: "This file might be compressed using EXEPACK."
+---
+name: PKLITE signature
+ragel: |
+  'PKLITE Copr. '
+warn: "This file might be compressed using PKLITE."
+---
+name: LZEXE signature
+ragel: |
+  'LZ09'|'LZ91'
+warn: "This file might be compressed using LZEXE."

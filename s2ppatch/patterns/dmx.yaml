@@ -1,0 +1,167 @@
+# Hugely annoying: we need to work around relocations...
+# That's what the stray 'test' instructions are for
+---
+name: DMX engine SendData [1/3]
+ragel: |
+  push_ebx.
+  push_ecx.
+  push_edx.
+  mov_cl_al.
+  xor_ebx_ebx.
+  mov_edx_dword_any32.
+  sub_eax_eax.
+  in_al_dx.
+  test_al_i8.0x040.
+  jnz_i8.any.
+  mov_edx_dword_any32.
+  mov_al_cl.
+  out_dx_al.
+  xor_ebx_ebx.
+  (mov_edx_dword_any32
+  |sub_eax_eax
+  |in_al_dx
+  |(add_ebx_byte_i8.any)
+  )*.
+  add_ebx_byte_i8 @{aux_ptr=fpc-1;}.any.
+  sub_eax_eax.
+  in_al_dx.
+  cmp_ebx_byte_i8.any.
+  jnl_i8.any.
+  jmp_i8.any.
+  inc_ebx.
+  cmp_ebx_any32.
+  jl_i8.any.
+  pop_edx.
+  pop_ecx.
+  pop_ebx
+hack: |
+  *ts++ = 0x88;
+  *ts++ = 0xC4;  /* mov ah, al */
+  patch_jump_32(ts, aux_ptr);
+  ts = aux_ptr;
+replace: |
+  bits 32
+  %define ARG ah
+  push edx
+  %include 'data32.s'
+  pop edx
+---
+name: DMX engine SendData (variant) [1/3]
+ragel: |
+  mov_cl_al.
+  xor_ebx_ebx.
+  mov_edx_dword_any32.
+  sub_eax_eax.
+  in_al_dx.
+  test_al_i8.0x40.
+  jnz_i8.0x0D.
+  mov_edx_dword_any32.
+  mov_al_cl.
+  out_dx_al.
+  pop_edx.
+  pop_ecx.
+  pop_ebx.
+  ret.
+  inc_ebx.
+  cmp_ebx_any32.
+  jl_i8.0xDD
+replace: |
+  bits 32
+  mov edx, PORT2
+    test eax, 0
+  mov ah, al
+  mov al, 3
+  out dx, al
+  mov al, ah
+  dec edx
+    test eax, 0
+  dec edx
+  out dx, al
+  inc edx
+  inc edx
+  mov al, 7
+  out dx, al
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+---
+name: DMX engine SendCmd [2/3]
+ragel: |
+  push_ebx.
+  push_ecx.
+  push_edx.
+  mov_cl_al.
+  xor_ebx_ebx.
+  mov_edx_dword_any32.
+  sub_eax_eax.
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  inc_ebx.
+  cmp_ebx_any32.
+  jl_i8.any.
+  cmp_ebx_any32.
+  jz_i8.any.
+  mov_edx_dword_any32.
+  mov_al_cl.
+  out_dx_al.
+  xor_ebx_ebx.
+  mov_edx_dword_any32.
+  sub_eax_eax.
+  in_al_dx.
+  test_al_i8.0x80
+hack: |
+  /* don't NOP out the unused space, might screw with relocations */
+  te = ts + 45;
+replace: |
+  bits 32
+  push edx
+  mov ah, al
+  mov edx, PORT2
+    test eax, 0
+  mov al, 0x02
+  out dx, al
+  dec edx
+  dec edx
+  mov al, ah
+  out dx, al
+  inc edx
+  inc edx
+  mov al, 0x06
+  out dx, al
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  in al, dx
+  mov al, 0x0F
+  out dx, al
+  mov al, 0x07
+  out dx, al
+    test eax, 0
+  pop edx
+  ret
+---
+name: DMX engine BoardInstalled [3/3]
+ragel: |
+  sub_eax_eax.
+  in_al_dx.
+  mov_al_i8.0xff.
+  mov_edx_dword_any32.
+  xor_ebx_ebx.
+  out_dx_al.
+  mov_edx_dword_any32.
+  sub_eax_eax.
+  in_al_dx.
+  test_al_i8.0x40.
+  ^pop_edx*.
+  mov_eax_i32 @{aux_ptr=fpc;}.0x01.0x00.0x00.0x00.
+  pop_edx.
+  pop_ebx.
+  ret
+hack: |
+  patch_jump_32(ts, aux_ptr);

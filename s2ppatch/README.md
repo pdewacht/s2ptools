@@ -32,6 +32,10 @@ much all formats.
 
 ## Working games
 
+- Doom and other games using the same sound engine (Heretic, Hexen,
+  Raptor: Call of the Shadows, etc.)
+- Games that use the Miles Audio Interface Library, both 16-bit and
+  32-bit.
 
 ## Compilation
 

@@ -4,6 +4,6 @@ set -e
 eval $(grep ^VERSION= build.sh)
 DEFS="-DVERSION=$VERSION"
 
-python3 genpat.py > patterns.rl
-ragel -s -G2 patch.rl
-cc -Wall -O2 $DEFS -o s2ppatch main.c patch.c
+python3 genpat.py
+ragel -s -G2 scan.rl
+cc -Wall -Og $DEFS -o s2ppatch -fsanitize=undefined,address main.c patch.c scan.c

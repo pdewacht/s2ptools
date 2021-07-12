@@ -165,3 +165,6 @@ ragel: |
   ret
 hack: |
   patch_jump_32(ts, aux_ptr);
+  ts = te;
+replace: |
+  section .text

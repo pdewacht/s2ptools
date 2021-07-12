@@ -86,7 +86,7 @@ replace: |
   bits 32
   %define ARG [ebp+8]
   %include 'data32.s'
-  # jump over the area with the relocations...
+  ; jump over the area with the relocations...
   jmp skip
   times 32 db 0
   skip:

@@ -1,0 +1,160 @@
+---
+name: Sierra 16-bit (delay)
+ragel: |
+  in_al_dx.
+  dec_di.
+  cmp_di_i8.0x00.
+  jnz_i8.0xF9
+replace:
+  nop
+---
+name: Sierra 16-bit (command)
+ragel: |
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  dec_cx.
+  cmp_cx_i8.0x00.
+  jnz_i8.any.
+  jmp_i8.any
+  nop?.
+  mov_al_bl.
+  out_dx_al.
+  mov_cx_i16.any.any.
+  in_al_dx.
+  rol_al_1.
+  jnc_i8.any
+  dec_cx.
+  cmp_cx_i8.0x00.
+  jnz_i8.any
+  mov_dx_i16.0x30.0x03.
+  in_al_dx
+replace: |
+  %define ARG bl
+  %include 'cmd16.s'
+  mov al, 0xFE
+---
+name: Sierra 16-bit (data)
+ragel: |
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  dec_cx.
+  rol_al_1.
+  jc_i8.any.
+  mov_dx_i16.0x30.0x03.
+  in_al_dx.
+  mov_dx_i16.0x31.0x03.
+  cmp_cx_i8.0x01.
+  jnl_i8.any.
+  jmp_i8.any.
+  nop?.
+  mov_dx_i16.0x30.0x03.
+  mov_al_bl.
+  out_dx_al
+replace: |
+  %define ARG bl
+  %include 'data16.s'
+---
+name: Sierra 32-bit (command)
+ragel: |
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  o16.dec_cx.
+  o16.cmp_cx_i8.0x00.
+  jnz_i8.any.
+  jmp_i8.any.
+  mov_al_bl.
+  out_dx_al.
+  o16.mov_cx_i16.any.any.
+  in_al_dx.
+  rol_al_1.
+  ( jnc_i8.any
+  | jmp_i8.any. (mov_eax_i32.any.any.any.any)?
+  ).
+  o16.dec_cx.
+  o16.cmp_cx_i8.0x00.
+  jnz_i8.any.
+  ( o16.mov_dx_i16.0x30.0x03
+  | mov_dx_dword_fs_any32
+  ).
+  in_al_dx
+replace: |
+  bits 32
+  %define ARG bl
+  %include 'cmd32.s'
+---
+name: Sierra 32-bit (data)
+ragel: |
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  o16.dec_cx.
+  rol_al_1.
+  ( jc_i8.any
+  | jmp_i8.any
+  ).
+  ( o16.mov_dx_i16.0x30.0x03
+  | mov_dx_dword_fs_any32
+  ).
+  in_al_dx.
+  ( o16.mov_dx_i16.0x31.0x03
+  | mov_dx_dword_fs_any32.
+    o16.add_dx_i8.0x01
+  ).
+  o16.cmp_cx_i8.0x01.
+  jnl_i8.any.
+  (jmp_i8.any)?.
+  ( o16.mov_dx_i16.0x30.0x03
+  | mov_dx_dword_fs_any32
+  ).
+  mov_al_bl.
+  out_dx_al
+replace: |
+  bits 32
+  %define ARG bl
+  %include 'data32.s'
+---
+name: Ravi mmumap.drv (command)
+ragel: |
+  mov_cx_i16.any.any.
+  mov_dx_i16.any.any.
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  loop_i8.any
+  mov_al_bl.
+  out_dx_al.
+  mov_cx_i16.any.any.
+  in_al_dx.
+  test_al_i8.0x80
+  jz_i8.any
+  loop_i8.any.
+  (jmp_i16.any.any | jmp_i8.any).
+  mov_dx_i16.0x30.0x03.
+  in_al_dx
+replace: |
+  %define ARG bl
+  %include 'cmd16.s'
+---
+name: Ravi mmumap.drv (data)
+ragel: |
+  mov_cx_i16.any.any.
+  mov_dx_i16.any.any.
+  in_al_dx.
+  test_al_i8.0x40.
+  jz_i8.any.
+  test_al_i8.0x80.
+  jnz_i8.any.
+  mov_dx_i16.any.any.
+  in_al_dx.
+  mov_dx_i16.any.any.
+  loop_i8.any.
+  (jmp_i16.any.any | jmp_i8.any).
+  mov_dx_i16.any.any.
+  mov_al_bl.
+  out_dx_al
+replace: |
+  %define ARG bl
+  %include 'data16.s'

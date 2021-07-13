@@ -1,0 +1,27 @@
+September 9, 2003 - BETA 0.5.3
+   - Applied a patch by Andy Hefner to fix a fadeout bug in The Colonel's
+     Bequest, which would hang after the sound stopped playing.
+
+August 10, 2002 - BETA 0.5.2
+   - Fixed stuck notes bug. Some previous versions may have incorrectly
+     issued CC78 instead of CC7B to turn off all notes on a channel.
+
+June 29, 2002 - release BETA 0.5.1
+   - Added sanity check on running status mode. In the 1988 Christmas Card,
+     the driver employs running status on the very first sound event. The
+     Card still doesn't run properly, but the sanity check prevents a crash.
+
+March 12, 2002 - release BETA 0.5.0
+   - Added CC permit table
+   - Based off of nosnd BETA 0.5
+   - Switched PauseSound with StopSound and fixed assorted related bits
+   - Removed hardware wrapper functions (eg device_silence)
+   - Fixed confusion over whether looppoint is an absolute pointer or an
+     offset in the resource
+   - Moved to global volume scale of 0-63 instead of 0-15 for smoother fades
+   - Ensure correct cue position in SeekSound
+   
+December 21, 2000 - release ALPHA 0.2
+   - The percussion channel (channel 10) is now played regardless of whether
+     or not it is flagged. This fixes the no percussion bug in SQIII and
+     other games.

@@ -663,31 +663,8 @@ ChanPressure:
 ; MPU functions
 
 
-; wait_for_mpu
-; wait for the specified bit to clear on the specified port
-; in: ah = flag
-; out: al = 0 if cleared, -1 if timed out
-
-wait_for_mpu:
-   push cx
-   push dx
-   mov dx, 0x331
-   mov cx, 0x7FFF            ; timeout
-   wfm_waiter:
-   in al, dx
-   and al, ah
-   jz wfm_success
-   loop wfm_waiter
-
-   mov al, 0xFF              ; fail
-   pop dx
-   pop cx
-   ret
-
-   wfm_success:              ; succes
-   pop dx
-   pop cx
-   ret
+%define PORT2 [cs:lpt_ctrl]
+lpt_ctrl: dw 0
 
 
 ; mpu_output
@@ -697,29 +674,15 @@ wait_for_mpu:
 
 mpu_output:
    push ax
-   mov ah, 0x40
-   call wait_for_mpu
+   push bx
+   push dx
+   mov bx, ax
+   %define ARG bl
+   %include '../s2ppatch/asm/data16.s'
+   %undef ARG
+   pop dx
+   pop bx
    pop ax
-   push dx
-   mov dx, 0x330
-   out dx, al
-   pop dx
-   ret
-
-
-; mpu_input
-; input a byte from the specified port
-; in:
-; out: al = byte, ah = 0 on success, -1 on fail
-
-mpu_input:
-   push dx
-   mov ah, 0x80
-   call wait_for_mpu
-   mov ah, al
-   mov dx, 0x330
-   in al, dx
-   pop dx
    ret
 
 
@@ -729,17 +692,17 @@ mpu_input:
 ; out: ah = 0 on success, -1 on fail, al destroyed
 
 mpu_detect:
-   push dx
-   mov dx, 0x331
-   mov al, 0xFF
-   out dx, al
-   pop dx
-   call mpu_input
-   mov ah, 0x40
-   call wait_for_mpu
-   test al, al
-   jnz md_fail
+   ; get LPT1 port
+   push ds
+   mov ax, 0x40
+   mov ds, ax
+   mov ax, [0x0008]
+   pop ds
+   test ax, ax
+   jz md_fail
 
+   add ax, 2
+   mov PORT2, ax
    xor ah, ah                ; success
    ret
 
@@ -754,12 +717,13 @@ mpu_detect:
 ; out:
 
 mpu_init:
+   push ax
    push dx
-   mov dx, 0x331
-   mov al, 0x3F
-   out dx, al
+   %define ARG 0x3F
+   %include '../s2ppatch/asm/cmd16.s'
+   %undef ARG
    pop dx
-   call mpu_input
+   pop ax
 
    mov al, 0xB1
    call mpu_output
@@ -777,11 +741,6 @@ mpu_init:
 ; out:
 
 mpu_exit:
-   push dx
-   mov dx, 0x331
-   mov al, 0xFF
-   out dx, al
-   pop dx
    ret
 
 

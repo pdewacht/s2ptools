@@ -1,3 +1,13 @@
+This is Ravi Iyengar's Sierra SCI0 General MIDI driver, adapted for
+the DreamBlaster S2P.
+
+For more information on the original driver, see
+http://sci.sierrahelp.com/Tools/RavisSoundDrivers.html
+
+The original documentation follows.
+
+----------------------------------------------------------------------
+
 gm
 BETA 0.5.3
 Septermber 9, 2003

@@ -1,41 +1,43 @@
 # S2PPATCH
 
-S2PPATCH can patch games to directly support the S2P. After
-patching, configure the game for FIXME.
+S2PPATCH can patch games to directly support the S2P. After patching,
+configure the game for MIDI output.
 
-Caveats:
+This is an alternative to using the SoftMPU TSR.
 
-- Patching can break support for real sound cards (including unrelated
-  cards).
-- Patched games might only work on the computer where the patch was
-  done. This is because the patch hardcodes the parallel port I/O
-  address, which might vary from computer to computer.
+Pros compared to the SoftMPU:
 
-Pros compared to the SOFTMPU:
-
-- No need for 386 CPU
-- Can work with protected mode games
+- No need for a 386 CPU.
+- Can work with protected mode games.
 
 Cons:
 
-- Patches need to be written for each game by hand
+- Patches need to be written for each game by hand. This can be rather
+  hard, so few games are supported.
 
-## Compressed EXEs
-
-DOS software often shipped with compressed EXEs. Such EXEs need to be
-unpacked before they can be patched. S2PPATCH will detect the more
-common compression schemes and warn about them ("This file might be
-compressed"). If you see such a warning, you should try decompressing
-it and running S2PPATCH again. I recommend [Ben Castricum's
-UNP](http://unp.bencastricum.nl/) decompressor, it will handle pretty
-much all formats.
 
 ## Working games
 
-- Doom and other games using the same sound engine (Heretic, Hexen,
-  Raptor: Call of the Shadows, etc.)
-- Games that use the Miles Audio Interface Library, both 16-bit and
-  32-bit.
+- Doom and other games using the same sound engine: Heretic, Hexen,
+  Raptor: Call of the Shadows, etc.
+
+- Games that use the Miles Audio Interface Library (both 16-bit and
+  32-bit).
+
+- Some Sierra games.
+
+For Miles & Sierra games, the file to be patched is the MIDI
+driver. This file is usually named something like 'MT32' or 'MIDI'.
+
+
+## Caveats
+
+Patching will break support for regular MIDI output.
+
+Patched games might only work on the computer where the patch was
+done. This is because the patch hardcodes the parallel port I/O
+address, which might vary from computer to computer.
+
 
 ## Compilation
 

@@ -24,7 +24,7 @@ Cons:
 - Games that use the Miles Audio Interface Library (both 16-bit and
   32-bit).
 
-- Some Sierra games.
+- Most Sierra games, except for the oldest ones.
 
 For Miles & Sierra games, the file to be patched is the MIDI
 driver. This file is usually named something like 'MT32' or 'MIDI'.

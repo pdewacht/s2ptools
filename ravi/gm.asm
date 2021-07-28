@@ -30,6 +30,7 @@
 
 
 [BITS 16]
+[CPU 186]
 
 ; Drivers are flatform binaries that get loaded at the start of
 ; a segment. When a driver function needs to be executed, the
@@ -1411,7 +1412,7 @@ mapMIDIInstruments:
       add si, 8
       dec cx
       test cx, cx
-      jnz near patch_loop
+      jnz patch_loop
 ;      loop patch_loop
 
    cmp byte [cs:second], 0

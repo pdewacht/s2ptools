@@ -1,3 +1,6 @@
+; 8086-fixed by trixter@oldskool.org on 20211030.
+; Original header follows:
+;
 ; GM on MPU-401 driver for SCI0
 ; plays the MT-32 channels using Rickard's MIDI Mapping Magic
 ;    (see http://freesci.linuxgames.com)
@@ -30,7 +33,7 @@
 
 
 [BITS 16]
-[CPU 186]
+[CPU 8086]
 
 ; Drivers are flatform binaries that get loaded at the start of
 ; a segment. When a driver function needs to be executed, the
@@ -149,6 +152,27 @@ ExportTable:
    Export16:   dw PauseSound
    Export18:   dw SeekSound
 
+%macro __pusha 0
+        push    ax
+        push    cx
+        push    dx
+        push    bx
+        ;push    sp ;8086 PUSH SP behavior not the same as 286!
+        push    bp
+        push    si
+        push    di
+%endmacro
+
+%macro __popa 0
+        pop     di
+        pop     si
+        pop     bp
+        ;pop    sp ;8086 POP SP behavior not the same as 286!
+        pop     bx
+        pop     dx
+        pop     cx
+        pop     ax
+%endmacro
 
 ; DriverInterface
 ; Saves registers and calls export
@@ -162,7 +186,6 @@ DriverInterface:
    pushf
    push dx
    push bx
-   push sp
    push bp
    push si
    push di
@@ -175,7 +198,6 @@ DriverInterface:
    pop di
    pop si
    pop bp
-   pop sp
    pop bx
    pop dx
    popf
@@ -300,7 +322,8 @@ LoadSound:
    mov byte [cs:playstate], PLAYING ; we're playing this sound now
    
    mov cx, word [si+SND_VOLUME]
-   shl cx, 2                 ; we use a range of 0-63 for internal global volume
+   shl cx, 1
+   shl cx, 1                 ; we use a range of 0-63 for internal global volume
    mov word [cs:globalvol], cx
 
    call mpu_reset
@@ -359,7 +382,10 @@ DoSoundEvents:
    mov dl, cl                ; dl = full status byte (status and channel)
    mov byte [cs:status], cl
    mov al, cl
-   shr al, 4                 ; al = status
+   shr al, 1
+   shr al, 1
+   shr al, 1
+   shr al, 1                 ; al = status
    and cl, 0x0F              ; cl = channel
 
    cmp al, 0x0F
@@ -409,7 +435,8 @@ DoSoundEvents:
 
 SetVolume:
    mov cx, [si+SND_VOLUME]   ; cx = volume level (0-15)
-   shl cx, 2                 ; we use a range of 0-63 for internal global volume
+   shl cx, 1
+   shl cx, 1                 ; we use a range of 0-63 for internal global volume
    mov [cs:globalvol], cx
    retn
 
@@ -421,7 +448,8 @@ SetVolume:
 
 FadeOut:
    mov cx, [si+SND_VOLUME]   ; cx = volume level (0-15)
-   shl cx, 2                 ; we use a range of 0-63 for internal global volume
+   shl cx, 1
+   shl cx, 1                 ; we use a range of 0-63 for internal global volume
    test cx, cx
    jz f_stop                 ; just stop the sound now if the volume starts at 0
 
@@ -634,7 +662,9 @@ PatchChange:
    normal_patch_change:      ; this is a simple patch change
    ; get the GM instrument
    xor bh, bh
-   shl bx, 3
+   shl bx, 1
+   shl bx, 1
+   shl bx, 1
    mov cl, [cs:MIDI_mapping+bx+GM_INSTR]
 
    test cl, 128
@@ -1262,7 +1292,7 @@ patchpointer:   dw 0
 ; entry: es:di points to patch 1
 ; exit: MIDI_mapping filled
 mapMIDIInstruments:
-   pusha
+   __pusha
 
    mov ax, MIDI_mapping
    mov bx, MT32_PresetTimbreMaps
@@ -1493,5 +1523,5 @@ mapMIDIInstruments:
       loop rhythm_loop
 
    done_mapping:
-   popa
+   __popa
    ret

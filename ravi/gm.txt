@@ -1,12 +1,12 @@
 gm
-BETA 0.5.3
-Septermber 9, 2003
-Ravi I. [ravi.i@softhome.net]
+BETA 0.5.4
+Jun 16, 2005
+Ravi I. [ravi.i@rarefied.org]
 
 The gm driver is a General MIDI sound driver for Sierra's SCI0 games. This
 covers games like Conquests of Camelot, Space Quest III, most copies of
 King's Quest IV, Leisure Suit Larry III, and so on. The latest version of
-this driver is available from http://www4.ncsu.edu/~rniyenga/sci.
+this driver is available from http://www.rarefied.org/sci/.
 
 The driver is licensed under the GNU GPL with specific permission for linking
 with Sierra's SCI0 interpreter. Full details are available in the file
@@ -15,16 +15,16 @@ LICENSE. Source is available in the file gm.asm.
 Thanks to Rickard Lind and Christoph Reichenbach of the FreeSCI team (see
 http://freesci.linuxgames.com). Rickard wrote the patch mapping code in the
 file midi.c, which is copyrighted by him and Christoph. The code was
-translated into assembly for inclusion into this driver. Additionally,
-instead of muting the channel, the driver defaults to piano when an
-instrument could not be mapped.
+translated into assembly for inclusion into this driver.
 
 Contributors:
+   Rickard Lind
    Ravi Iyengar
    Andy Hefner
+   Christoph Reichenbach
 
 The driver also includes framework code. The framework driver is available
-from http://www4.ncsu.edu/~rniyenga/sci/.
+from http://www.rarefied.org/sci/.
 
 CAVEATS: This is an BETA version of the driver. Please feel free to report any
 bugs. To be especially helpful, include a patch.

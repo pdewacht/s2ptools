@@ -1,13 +1,13 @@
 ; GM on MPU-401 driver for SCI0
 ; plays the MT-32 channels using Rickard's MIDI Mapping Magic
 ;    (see http://freesci.linuxgames.com)
-; assembles with NASM (see http://sourceforge.net/projects/nasm/):
+; assembles with NASM (see http://nasm.sourceforge.net):
 ;    nasm gm.asm -o gm.drv -f bin
 
-; Copyright (c) 1999, 2000, 2002, 2003 by
+; Copyright (c) 1999, 2000, 2002, 2003, 2005 by
 ;    Rickard Lind
 ;    Christoph Reichenbach
-;    Ravi Iyengar [ravi.i@softhome.net]
+;    Ravi Iyengar [ravi.i@rarefied.org]
 ;    Andy Hefner
 ;
 ; This program is free software; you can redistribute it and/or
@@ -49,7 +49,7 @@ db 1                   ; sound driver id (0=display, 4=keyboard)
 db 5, 'gmdrv'
 
 ; a string with a description of the device
-db 23, 'General MIDI BETA 0.5.3'
+db 23, 'General MIDI BETA 0.5.4'
 
 
 
@@ -110,6 +110,7 @@ pssndreset:    db 0          ; boolean describing whether PauseSound should rese
 seekto:        dw 0          ; the end point for SeekSound
 seekcue:       dw 0          ; the desired sound cue at the end of SeekSound
 globalvol:     dw 60         ; global volume on a scale of 0 to 63
+muteflags:     dw 0          ; bit flag for each channel used to mute channels that have no GM instrument
 
 MIDI_mapping:   times 128 db 0, 0, 0, 0, 0, 0, 0, 0
 end_of_MIDI_mapping:         ; used in ending loop conditions
@@ -551,10 +552,19 @@ StopNote:
 
 PlayNote:
    cmp byte [cs:playstate], PLAYING
-   je play_note
+   je check_mute
 
    add di, 2                 ; we're just seeking, don't play anything
    ret
+
+   check_mute:               ; check the channel mute flag
+   mov ax, 1
+   shl ax, cl                ; cl = channel
+   test word [cs:muteflags], ax
+   jz play_note
+
+   add di, 2                 ; skip over parameters
+   ret                       ; return without playing because the mute flag is set
 
    play_note:
    mov al, dl
@@ -639,13 +649,31 @@ PatchChange:
    test cl, 128
    jz do_patch_change
 
-   mov cl, 0                 ; we didn't find a mapped instrument, default to piano
+   mov al, dl
+   and al, 0x0F              ; al = channel
+   cmp al, 9                 ; see if this is the percussion channel
+   setne al                  ; mute this channel unless it's the percussion channel
+   jmp set_channel_mute
 
-   do_patch_change:
+   do_patch_change:          ; send the translated patch change to the mpu
    mov al, dl
    call mpu_output
    mov al, cl
    call mpu_output
+   mov al, 0                 ; make sure the channel isn't muted
+
+   set_channel_mute:
+   mov cl, dl                ; dl is still the status
+   and cl, 0x0F              ; cl = channel
+   mov bx, 1
+   shl bx, cl
+   not bx
+   and word [cs:muteflags], bx ; clear the mute flag for the channel
+   xor bx, bx
+   mov bl, al
+   shl bx, cl
+   or word [cs:muteflags], bx ; set the mute flag for the channel if al is set
+   
    ret
 
 

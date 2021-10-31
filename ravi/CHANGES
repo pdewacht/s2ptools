@@ -1,3 +1,7 @@
+June 16, 2005 - BETA 0.5.4
+   - Turn off channels when their current instruments don't have a GM map
+     instead of defaulting to piano.
+
 September 9, 2003 - BETA 0.5.3
    - Applied a patch by Andy Hefner to fix a fadeout bug in The Colonel's
      Bequest, which would hang after the sound stopped playing.

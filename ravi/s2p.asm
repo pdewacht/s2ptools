@@ -1,3 +1,4 @@
+; adapted for DreamBlaster S2P by pdewacht@gmail.com
 ; 8086-fixed by trixter@oldskool.org on 20211030.
 ; Original header follows:
 ;
@@ -5,7 +6,7 @@
 ; plays the MT-32 channels using Rickard's MIDI Mapping Magic
 ;    (see http://freesci.linuxgames.com)
 ; assembles with NASM (see http://sourceforge.net/projects/nasm/):
-;    nasm gm.asm -o gm.drv -f bin
+;    nasm s2p.asm -o s2p.drv -f bin
 
 ; Copyright (c) 1999, 2000, 2002, 2003 by
 ;    Rickard Lind
@@ -50,10 +51,10 @@ dd 0x87654321          ; Sierra driver id
 db 1                   ; sound driver id (0=display, 4=keyboard)
 
 ; a string identifying the driver
-db 5, 'gmdrv'
+db 6, 's2pdrv'
 
 ; a string with a description of the device
-db 23, 'General MIDI BETA 0.5.3'
+db 16, 'DreamBlaster S2P'
 
 
 

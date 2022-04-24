@@ -1,0 +1,177 @@
+# Apogee sound system used in Rise of the Triad and Duke Nukem 3d and Shadow Warrior (shareware). 
+# C source code for the Apogee sound system is available in the source releases of Duke3d, ROTT and Shadow Warrior
+
+# need to patch the main game exes (duke3d.exe rott.exe sw.exe) and optionally setmain.exe for the setup music test.
+# in setup choose general midi or sound canvas or wave blaster on any port
+--- 
+# The MPU_SendMidi function One byte to send in AX
+name: Apogee Sound System MPU_SendMidi [1/3]
+# desc_original: Sends a byte (al) of MIDI data to the music device
+# desc_replacement: Sends the byte to the parallel port
+ragel: |
+ push_ebx.
+ push_ecx.
+ push_edx.
+ sub_esp_i8.0x4.
+ 0x89.0x04.0x24 #mov [esp], eax
+ mov_ecx_dword_any32.
+ mov_ebx_dword_any32.
+ inc_ecx.
+ test_ebx_ebx.
+ jbe_i8.any.
+ mov_edx_ecx.
+ sub_eax_eax.
+ in_al_dx.
+ test_al_i8.0x40.
+ jz_i8.any.
+ dec_ebx.
+ test_ebx_ebx.
+ ja_i8.any
+ 0x8a.0x04.0x24. #mov ah [esp]
+ 0x8d.0x51.0xff. #LEA EDX,[ECX-0x1]
+ out_dx_al.
+ add_esp_byte_i8.0x4.
+ pop_edx.
+ pop_ecx.
+ pop_ebx.
+ ret
+replace: |
+ bits 32
+ 
+ %define ARG ah
+ mov ah, al
+ push edx 
+ jmp .skip; jump past relocations
+ times 20 db 0x00
+ align 4 ;as this code is called a lot and we have the space, dword aligning the jump seems like a good idea, assuming the original code is aligned
+ .skip:
+ %include 'data32.s'
+ pop edx
+ ret
+---
+name: Apogee Sound System MPU_Reset [2/3]
+# desc_original: Resets the MPU401 card, return 0 sucesss, -1 not found
+# desc_replacement: Send Midi reset event 0xff to the S2p, always returning success. This may be called before the SAM2695 is in parallel mode
+ragel: |
+ push_ebx.
+ push_ecx.
+ push_edx.
+ mov_eax_i32.0xff.0x00.0x00.0x00.
+ mov_ecx_i32.0xff.0xff.0x00.0x00.
+ mov_ebx_dword_any32.
+ call_any32.
+ inc_ebx.
+ mov_edx_ebx.
+ sub_eax_eax.
+ in_al_dx.
+ test_al_i8.0x80.
+ jnz_i8.any.
+ dec_ebx.
+ mov_edx_ebx.
+ sub_eax_eax.
+ in_al_dx.
+ cmp_eax_i32.0xfe.0x00.0x00.0x00.
+ jnz_i8.any.
+ xor_eax_eax.
+ pop_edx.
+ pop_ecx.
+ pop_ebx.
+ ret.
+ inc_ebx
+ dec_ecx
+ test_ecx_ecx.
+ ja_i8.any
+ mov_eax_i32.0xff.0xff.0xff.0xff
+ pop_edx.
+ pop_ecx.
+ pop_ebx.
+ ret
+replace: |
+ bits 32
+ %define ARG 0xff
+ jmp .skip; jump past relocations
+ times 0x20 db 0
+ align 4
+ .skip: 
+ push edx
+  %include 'data32.s'
+ pop edx
+ xor eax, eax
+ ret
+---
+name: Apogee Sound System MPU_EnterUART [3/3]
+# desc_original: Sets the MPU401 card to operate in UART mode, return 0 sucesss, -2 UART failed
+# desc_replacement: Set the SAM2695 on the S2P into parallel UART mode, always return sucess, we dont really have enough bytes to check that it worked
+ragel: |
+ push_ebx.
+ push_ecx.
+ push_edx.
+ mov_eax_i32.0x3f.00.00.00
+ mov_ecx_i32.0xff.0xff.00.00
+ mov_ebx_dword_any32 #EBX,dword ptr [MPU_BaseAddr]
+ call_any32. #        CALL       MPU_SendCommand 
+ inc_ebx
+ mov_edx_ebx
+ sub_eax_eax
+ in_al_dx
+ test_al_i8.0x80
+  jnz_i8.any
+  dec_ebx
+  mov_edx_ebx
+  sub_eax_eax
+  in_al_dx
+  cmp_eax_i32.0xfe.00.00.00
+ jnz_i8.any
+ xor_eax_eax
+ pop_edx
+ pop_ecx
+ pop_ebx
+ ret
+ inc_ebx
+ dec_ecx
+ test_ecx_ecx
+ ja_i8.any
+ mov_eax_i32.0xfe.0xff.0xff.0xff
+ pop_edx
+ pop_ecx
+ pop_ebx
+ ret
+hack: |
+replace: |
+ bits 32
+ push edx
+ jmp .skip; jump past relocations
+ times 0x20 db 0x00
+ ;align 4
+ .skip: 
+ %include 'cmd32.s'
+ pop edx
+ xor eax, eax
+ ret
+#--- 
+# The MPU_Init function, Port from game config in EAX, return 0 on success, -1 not found, -2 UART failed
+# desc_original;:Detects and initializes the MPU401 card. It loops 4 times calling MPU_Reset_ then MPU_EnterUART_
+# Replacement: none needed the pattern of calling mpu_reset and MPU_EnterUART_ works for our purposes
+# name: Apogee Sound System MPU_Init [4/4]
+# ragel: |
+#  push_edx
+#  mov_edx_eax
+#  mov_eax_i32.any.any.any.any
+#  call_any32 #USER_GetText_
+#  test_eax_eax
+#  jz_i8.any
+#  call_any32 #atol_
+#  0xa3.any.any.any.any # mov [_MPU_Delay], eax
+#  0x89.0x15.any.any.any.any # mov dword ptr [MPU_BaseAddr],EDX
+#  mov_edx_i32.0x4.0.0.0
+#  call_any32 #MPU_Reset_
+#  test_eax_eax
+#  jnz_i8.any 
+#  call_any32 #MPU_EnterUART_
+#  pop_edx
+#  ret
+#  dec_edx
+#  test_edx_edx
+#  jg_i8.any
+#  pop_edx
+#  ret

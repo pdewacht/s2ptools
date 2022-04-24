@@ -24,6 +24,9 @@ Cons:
 - Games that use the Miles Audio Interface Library (both 16-bit and
   32-bit).
 
+- Rise of the Triad and other games using the Apogee Sound System:
+ Duke Nukem 3d, Shaddow Warrior (shareware), Blood and more
+
 - Most Sierra games, except for the oldest ones.
 
 For Miles & Sierra games, the file to be patched is the MIDI

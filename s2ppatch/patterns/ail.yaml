@@ -2,29 +2,41 @@
 name: Miles Audio Interface Library 16-bit [1/2]
 ragel: |
   cs?.mov_dx_word_any16.
+  (mov_cx_i16.0xff.0xff)?
   in_al_dx.
   test_al_i8.0x40.
   jz_i8.any.
+  (dec_cx.jz_i8.any)?
   test_al_i8.0x80.
   jnz_i8.any.
+  ((sti.
+  jmp_i8.0x00.
+  jmp_i8.0x00.
+  jmp_i8.0x00)| # MT32MPU.MDI has jmps while MPU401.MDI uses a loop and preserves flags
+  (pushf.
   sti.
-  jmp_i8.0x00.
-  jmp_i8.0x00.
-  jmp_i8.0x00.
+  mov_dx_i16.0x00.0x01.
+  dec_dx.
+  jnz_i8.0xfd)
+  popf)
   cs?.mov_dx_word_any16.
   in_al_dx.
   cs?.mov_dx_word_any16.
   jmp_i8.any.
   cs?.mov_dx_word_any16.
-  mov_al_byte_bp_i8.any @{aux_ptr=fpc;}.
+  ((mov_al_byte_bp_i8.any @{aux_ptr=fpc;})|  # MT32MPU USES STACK FOR ARG
+  (mov_al_ah @{aux_ptr = NULL;}))   # MPU401 uses a register
   out_dx_al
+  
 # Stack layout differs in different versions, use a hack to avoid
-# having to have multiple patterns.
+# having to have multiple patterns. Except for version that has args in registers
 hack: |
   /* mov ah, [bp+x] */
+  if (aux_ptr){
   *ts++ = 0x8A;
   *ts++ = 0x66;
   *ts++ = *aux_ptr;
+  }
 replace: |
   %define ARG ah
   %include 'data16.s'
@@ -38,7 +50,7 @@ ragel: |
   jz_i8.any.
   loop_i8.any.
   jmp_i8.any.
-  mov_al_byte_bp_i8.any.
+  ((mov_al_byte_bp_i8.any)|mov_al_ah)  # MT32MPU USES STACK FOR ARG, MPU401 uses a register
   out_dx_al.
   mov_cx_i16.0xFF.0xFF.
   cs?.mov_dx_word_any16.

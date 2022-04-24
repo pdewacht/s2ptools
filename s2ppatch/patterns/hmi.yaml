@@ -1,0 +1,190 @@
+#### Human Machine Interfaces(HMI) Sound Operating System (SOS). Used In many games, notably the descent series, Carmageddon (dos), Daggerfall
+## Multiple midi drivers are packed in HMIMDRV.386. 
+---
+#INIT FUNCTION FOR THE mpu401.com driver
+name: HMI SOS mpu401.com INIT [1/3]
+ragel: |
+ enter_i16_i8.0.0.0
+ push_ds
+  push_ecx
+ o16.mov_ax_i16.0xff.0xff
+ mov_ds_ax
+ mov_ax_ebp_byte_i8.0x18
+  o16.mov_dword_eax_i32.0xef.0.0.0
+  o16.xor_eax_eax
+  o16.mov_edx_i32.0x21.0
+  in_al_dx
+  o16.mov_dword_eax_i32.0xf1.0.0.0
+  or_al_i8.(0xfc|0xfd)
+  out_dx_al
+  mov_al_i8.0xff
+  o16.mov_edx_dword_i32.0xef.0.0.0
+  o16.inc_edx
+  out_dx_al
+  mov_ecx_i32.0xff.0xff.(0x3|0).0.
+  in_al_dx
+  and_al_i8.0x80
+  jz_i32.0x0b.0.0.0
+  loop_i8.0xf5
+  o16.mov_ptr_i32_i32.0xf3.0.0.0.8.0
+  o16.dec_edx
+  in_al_dx
+  o16.inc_edx
+  mov_ecx_i32.0xff.0xff.(0x3|0).0.
+  in_al_dx
+  and_al_i8.0x40
+  jz_i32.0x0b.0.0.0
+  loop_i8.0xf5
+  o16.mov_ptr_i32_i32.0xf3.0.0.0.8.0
+  mov_al_i8.0x3f
+  out_dx_al
+  mov_ecx_i32.0xff.0xff.0.0
+  in_al_dx
+  loop_i8.0xfd
+  o16.mov_edx_dword_i32.0xef.0.0.0
+  in_al_dx
+  o16.mov_edx_i32.0x20.0
+  mov_al_i8.0x20
+  out_dx_al
+  o16.mov_eax_dword_i32.0xf1.0.0.0
+  o16.mov_edx_i32.0x21.0
+  out_dx_al
+  pop_ecx
+  xor_eax_eax
+  o16.mov_eax_dword_i32.0xf3.0.0.0
+  pop_ds
+  leave
+  retf
+replace: |
+ bits 32
+ push edx 
+ jmp .skip; jump past bytes that get segment written to them
+ times 8 db 0x00
+ .skip:
+ %include 'cmd32.s' ; Send command to Set to parallel uart mode
+ %define ARG 0xff   ; Send midi reset event
+ %include 'data32.s' 
+ pop edx
+ xor eax, eax
+ retf ; Function is farcalled
+---
+#UNINIT FUNCTION FOR THE mpu401.com driver. uninitialize the device
+name: HMI SOS mpu401.com UNINIT [2/3]
+ragel: |
+ enter_i16_i8.0.0.0
+ push_ds
+ push_ecx
+ o16.mov_ax_i16.0xff.0xff
+ mov_ds_ax
+ o16.xor_eax_eax
+ o16.mov_edx_i32.0x21.0
+ in_al_dx  
+ o16.mov_dword_eax_i32.0xf1.0.0.0
+ or_al_i8.(0xfc|0xfd).
+ out_dx_al
+ o16.mov_edx_dword_i32.0xef.0.0.0
+ o16.inc_edx
+ mov_ecx_i32.0xff.0xff.0x03.0
+ in_al_dx
+ and_al_i8.0x80
+ jz_i32.0x02.0.0.0
+ loop_i8.0xf5
+ mov_al_i8.0xff
+ out_dx_al
+ mov_ecx_i32.0xff.0xff.(0x03|0x0f).0
+ in_al_dx
+ and_al_i8.0x80
+ jnz_i32.0x02.0.0.0
+ loop_i8.0xf5
+ o16.dec_edx
+ in_al_dx
+ o16.mov_edx_i32.0x20.00
+ mov_al_i8.0x20
+ out_dx_al
+ o16.mov_eax_dword_i32.0xf1.0.0.0
+ o16.mov_edx_i32.0x21.00
+ out_dx_al
+ pop_ecx
+ pop_ds
+ leave
+ retf
+replace: |
+ bits 32
+ push edx 
+ jmp .skip; jump past bytes that get segment written to them
+ times 8 db 0x00
+ .skip:
+ %define ARG 0xff   ; Send midi reset event
+ %include 'data32.s'
+ pop edx
+ xor eax, eax
+ retf ; Function is farcalled
+
+---
+#send FUNCTION FOR THE mpu401.com driver. send array of bytes (far ptr on stack @0x8) count(stack@0x10)
+name: HMI SOS mpu401.com SEND [3/3]
+ragel: |
+ enter_i16_i8.0.0.0
+  push_ds
+  o16.mov_ax_i16.0xff.0xff
+ mov_ds_ax
+ push_es
+ push_edi
+ (push_ecx
+ push_edx)?. # different driver versions preserve different registers
+ o16.cmp_ptr_i32_i8.0xf3.0.0.0.0
+ jnz_i32.0x33.0.0.0
+ les_edi_ebp_i8.0x0c
+ o16.mov_edx_dword_i32.0xef.0.0.0
+ mov_ecx_ptr_ebp_i8.0x14
+ cmp_cx_i8.0
+ jz_i32.0x1d.0.0.0
+ o16.inc_edx
+ push_ecx
+ mov_ecx_i32.0xff.0xff.0.0
+ in_al_dx
+ and_al_i8.0x40
+ jz_i32.0x2.0.0.0
+ loop_i8.0xf5
+ pop_ecx
+ o16.dec_edx
+ es.mov_al_byte_edi
+ inc_edi
+ out_dx_al
+ loop_i8.0xe3
+ (pop_edx
+ pop_ecx)?
+ pop_edi
+ pop_es
+ pop_ds
+ mov_eax_i32.0.0.0.0
+ leave
+ retf
+replace: |
+ %define count 0x10
+ %define buffer 0x08
+ bits 32
+ push edx 
+ push ecx
+ push esi
+ push es
+ jmp .skip; jump past bytes that get segment written to them
+ times 4 db 0x90
+ .skip:
+ mov ecx, [esp+0x10+count]  ; We dont need no stack frames to access arguments
+ les esi, [esp+0x10+buffer]
+ test ecx,ecx
+ jz .end
+ .next:
+  %define ARG [es:esi] 
+ %include 'data32.s'
+ inc esi
+ loop .next
+ .end:
+ xor eax,eax
+ pop es
+ pop esi
+ pop ecx
+ pop edx
+ retf
+ 

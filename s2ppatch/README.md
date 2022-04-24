@@ -27,6 +27,11 @@ Cons:
 - Rise of the Triad and other games using the Apogee Sound System:
  Duke Nukem 3d, Shaddow Warrior (shareware), Blood and more
 
+- Games that use Human Machine Interfaces(HMI) Sound Operating System (SOS)
+  Examples: Descent 1&2, The Elder Scrolls II Daggerfall, Carmageddon
+  Patch hmimdrv.386 (note the m after hmi, the file hmidrv.386 is not correct)
+  choose MPU-401 or Sound Canvas in setup.
+
 - Most Sierra games, except for the oldest ones.
 
 For Miles & Sierra games, the file to be patched is the MIDI
